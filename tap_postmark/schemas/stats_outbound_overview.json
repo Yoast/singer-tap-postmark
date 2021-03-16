@@ -1,0 +1,72 @@
+{
+	"selected": true,
+	"type": [
+		"null",
+		"object"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"date": {
+			"type": [
+				"null",
+				"string"
+			],
+			"format": "date-time"
+		},
+		"id": {
+			"type": "number"
+		},
+		"sent": {
+			"type": "number"
+		},
+		"bounced": {
+			"type": "number"
+		},
+		"smtp_api_errors": {
+			"type": "number"
+		},
+		"boucerate": {
+			"type": "number"
+		},
+		"spamcomplaints": {
+			"type": "number"
+		},
+		"spamcomplaints_rate": {
+			"type": "number"
+		},
+		"tracked": {
+			"type": "number"
+		},
+		"opens": {
+			"type": "number"
+		},
+		"unique_opens": {
+			"type": "number"
+		},
+		"totalclicks": {
+			"type": "number"
+		},
+		"unique_linksclicked": {
+			"type": "number"
+		},
+		"with_client_recorded": {
+			"type": "number"
+		},
+		"with_platform_recorded": {
+			"type": "number"
+		},
+		"with_readtime_recorded": {
+			"type": "number"
+		},
+		"with_linktracking": {
+			"type": "number"
+		},
+		"with_opentracking": {
+			"type": "number"
+		},
+		"total_tracked_links_sent": {
+			"type": "number"
+		}
+		
+	}
+}

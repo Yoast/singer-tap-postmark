@@ -1,0 +1,89 @@
+{
+	"selected": true,
+	"type": [
+		"null",
+		"object"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"message_id": {
+			"type": "string"
+		},
+		"message_stream": {
+			"type": "string"
+		},
+		"to": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"email": {
+					"type": "string"
+				},
+				"name": {
+					"type": [
+						"null",
+						"string"
+					]
+				}
+			}
+		},
+		"cc": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"email": {
+					"type": "string"
+				},
+				"name": {
+					"type": [
+						"null",
+						"string"
+					]
+				}
+			}
+		},
+		"bcc": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"email": {
+					"type": "string"
+				},
+				"name": {
+					"type": [
+						"null",
+						"string"
+					]
+				}
+			}
+		},
+		"recieved_at": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"from": {
+			"type": "string"
+		},
+		"subject": {
+			"type": "string"
+		},
+		"status": {
+			"type": "string"
+		},
+		"track_opens": {
+			"type": "string"
+		},
+		"track_links": {
+			"type": "string"
+		}
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"selected": true,
+	"type": [
+		"null",
+		"object"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"id": {
+			"type": "number"
+		},
+		"date": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"bounce_type": {
+			"type": "string"
+		},
+		"count": {
+			"type": "number"
+		}
+	}
+}

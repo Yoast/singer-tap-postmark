@@ -1,0 +1,134 @@
+{
+	"selected": true,
+	"type": [
+		"null",
+		"object"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"recordtype": {
+			"type": "string"
+		},
+		"client": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"company": {
+					"type": "string"
+				},
+				"family": {
+					"type": "string"
+				}
+			}
+		},
+		"os": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"company": {
+					"type": "string"
+				},
+				"family": {
+					"type": "string"
+				}
+			}
+		},
+		"platform": {
+			"type": "string"
+		},
+		"user_agent": {
+			"type": "string"
+		},
+		"read_seconds": {
+			"type": "number"
+		},
+		"geo": {
+			"type": [
+				"null",
+				"object"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"country_iso_code": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"country": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"region_iso_code": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"region": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"city": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"zip": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"coords": {
+					"type": [
+						"null",
+						"string"
+					]
+				},
+				"ip": {
+					"type": [
+						"null",
+						"string"
+					]
+				}
+			}
+		},
+		"message_id": {
+			"type": "string"
+		},
+		"message_stream": {
+			"type": "string"
+		},
+		"recieved_at": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"tag": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"recipient": {
+			"type": "string"
+		}
+	}
+}
