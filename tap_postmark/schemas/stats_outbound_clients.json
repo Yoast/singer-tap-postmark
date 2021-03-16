@@ -6,7 +6,8 @@
 	"additionalProperties": false,
 	"properties": {
 		"id": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"date": {
 			"type": "string",

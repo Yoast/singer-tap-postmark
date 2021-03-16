@@ -14,58 +14,74 @@
 			"format": "date-time"
 		},
 		"id": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"sent": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"bounced": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"smtp_api_errors": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
-		"boucerate": {
+		"bouncerate": {
 			"type": "number"
 		},
 		"spamcomplaints": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"spamcomplaints_rate": {
 			"type": "number"
 		},
 		"tracked": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"opens": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"unique_opens": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"totalclicks": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"unique_linksclicked": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"with_client_recorded": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"with_platform_recorded": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"with_readtime_recorded": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"with_linktracking": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"with_opentracking": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		},
 		"total_tracked_links_sent": {
-			"type": "number"
+			"type": "number",
+			"format": "integer"
 		}
 		
 	}
