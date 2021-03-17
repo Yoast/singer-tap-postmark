@@ -277,32 +277,32 @@ STREAMS: MappingProxyType = MappingProxyType({
             'date': {
                 'map': 'date', 'type': date_parser, 'null': False,
             },
-            'autoresponder': {
-                'map': 'AutoResponder', 'type': int, 'null': True,
+            'AutoResponder': {
+                'map': 'autoresponder', 'type': int, 'null': True,
             },
-            'blocked': {
-                'map': 'Blocked', 'type': int, 'null': True,
+            'Blocked': {
+                'map': 'blocked', 'type': int, 'null': True,
             },
-            'dnserror': {
-                'map': 'DnsError', 'type': int, 'null': True,
+            'DnsError': {
+                'map': 'dnserror', 'type': int, 'null': True,
             },
-            'hardbounce': {
-                'map': 'HardBounce', 'type': int, 'null': True,
+            'HardBounce': {
+                'map': 'hardbounce', 'type': int, 'null': True,
             },
-            'smtp_api_error': {
-                'map': 'SMTPApiError', 'type': int, 'null': True,
+            'SMTPApiError': {
+                'map': 'smtp_api_error', 'type': int, 'null': True,
             },
-            'softbounce': {
-                'map': 'SoftBounce', 'type': int, 'null': True,
+            'SoftBounce': {
+                'map': 'softbounce', 'type': int, 'null': True,
             },
-            'spamnotification': {
-                'map': 'SpamNotification', 'type': int, 'null': True,
+            'SpamNotification': {
+                'map': 'spamnotification', 'type': int, 'null': True,
             },
-            'transient': {
-                'map': 'Transient', 'type': int, 'null': True,
+            'Transient': {
+                'map': 'transient', 'type': int, 'null': True,
             },
-            'unknown': {
-                'map': 'Unknown', 'type': int, 'null': True,
+            'Unknown': {
+                'map': 'unknown', 'type': int, 'null': True,
             }
         },
     },
@@ -358,56 +358,56 @@ STREAMS: MappingProxyType = MappingProxyType({
             'id': {
                 'map': 'id', 'null': False,
             },
-            'sent': {
-                'map': 'Sent', 'type': int, 'null': False,
+            'Sent': {
+                'map': 'sent', 'type': int, 'null': False,
             },
-            'bounced': {
-                'map': 'Bounced', 'type': int, 'null': False,
+            'Bounced': {
+                'map': 'bounced', 'type': int, 'null': False,
             },
-            'smtp_api_errors': {
-                'map': 'SMTPApiErrors', 'type': int, 'null': False,
+            'SMTPApiErrors': {
+                'map': 'smtp_api_errors', 'type': int, 'null': False,
             },
-            'bouncerate': {
-                'map': 'BounceRate', 'null': False,
+            'BounceRate': {
+                'map': 'bouncerate', 'null': False,
             },
-            'spamcomplaints': {
-                'map': 'SpamComplaints', 'type': int, 'null': False,
+            'SpamComplaints': {
+                'map': 'spamcomplaints', 'type': int, 'null': False,
             },
-            'spamcomplaints_rate': {
-                'map': 'SpamComplaintsRate', 'null': False,
+            'SpamComplaintsRate': {
+                'map': 'spamcomplaints_rate', 'null': False,
             },
-            'tracked': {
-                'map': 'Tracked', 'type': int, 'null': False,
+            'Tracked': {
+                'map': 'tracked', 'type': int, 'null': False,
             },
-            'opens': {
-                'map': 'Opens', 'type': int, 'null': False,
+            'Opens': {
+                'map': 'opens', 'type': int, 'null': False,
             },
-            'unique_opens': {
-                'map': 'UniqueOpens', 'type': int, 'null': False,
+            'UniqueOpens': {
+                'map': 'unique_opens', 'type': int, 'null': False,
             },
-            'totalclicks': {
-                'map': 'TotalClicks', 'type': int, 'null': False,
+            'TotalClicks': {
+                'map': 'totalclicks', 'type': int, 'null': False,
             },
-            'unique_linksclicked': {
-                'map': 'UniqueLinksClicked', 'type': int, 'null': False,
+            'UniqueLinksClicked': {
+                'map': 'unique_linksclicked', 'type': int, 'null': False,
             },
-            'with_client_recorded': {
-                'map': 'WithClientRecorded', 'type': int, 'null': False,
+            'WithClientRecorded': {
+                'map': 'with_client_recorded', 'type': int, 'null': False,
             },
-            'with_platform_recorded': {
-                'map': 'WithPlatformRecorded', 'type': int, 'null': False,
+            'WithPlatformRecorded': {
+                'map': 'with_platform_recorded', 'type': int, 'null': False,
             },
-            'with_readtime_recorded': {
-                'map': 'WithReadTimeRecorded', 'type': int, 'null': False,
+            'WithReadTimeRecorded': {
+                'map': 'with_readtime_recorded', 'type': int, 'null': False,
             },
-            'with_linktracking': {
-                'map': 'WithLinkTracking', 'type': int, 'null': False,
+            'WithLinkTracking': {
+                'map': 'with_linktracking', 'type': int, 'null': False,
             },
-            'with_opentracking': {
-                'map': 'WithOpenTracking', 'type': int, 'null': False,
+            'WithOpenTracking': {
+                'map': 'with_opentracking', 'type': int, 'null': False,
             },
-            'total_tracked_links_sent': {
-                'map': 'TotalTrackedLinksSent', 'type': int, 'null': False,
+            'TotalTrackedLinksSent': {
+                'map': 'total_tracked_links_sent', 'type': int, 'null': False,
             }
         },
     },

@@ -101,27 +101,58 @@ def clean_postmark_stats_outbound_bounces(
     Returns:
         dict -- cleaned response_data
     """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['stats_outbound_bounces'].get(
+        'mapping',
+    )
+
     # Create Unique ID
     id = int(date_day.replace('-', ''))
+
     # Create new cleaned Dict
     cleaned_data: dict = {
         'id': id,
         'date': date_day,
-        'autoresponder': response_data.get('AutoResponder'),
-        'blocked': response_data.get('Blocked'),
-        'dnserror': response_data.get('DnsError'),
-        'hardbounce': response_data.get('HardBounce'),
-        'smtp_api_error': response_data.get('SMTPApiError'),
-        'softbounce': response_data.get('SoftBounce'),
-        'spamnotification': response_data.get('SpamNotification'),
-        'transient': response_data.get('Transient'),
-        'unknown': response_data.get('Unknown'),
+        'AutoResponder': response_data.get('AutoResponder'),
+        'Blocked': response_data.get('Blocked'),
+        'DnsError': response_data.get('DnsError'),
+        'HardBounce': response_data.get('HardBounce'),
+        'SMTPApiError': response_data.get('SMTPApiError'),
+        'SoftBounce': response_data.get('SoftBounce'),
+        'SpamNotification': response_data.get('SpamNotification'),
+        'Transient': response_data.get('Transient'),
+        'Unknown': response_data.get('Unknown'),
     }
     response_data.pop('Days', None)
-    return cleaned_data
+    return clean_row(cleaned_data, mapping)
+
+
+def clean_postmark_stats_outbound_overview(
+    date_day: str,
+    response_data: dict,
+) -> dict:
+    """Clean postmark overview response_data.
+
+    Arguments:
+        response_data {dict} -- input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['stats_outbound_overview'].get(
+        'mapping',
+    )
+    # Create Unique ID
+    id = int(date_day.replace('-', ''))
+
+    response_data['id'] = id
+    response_data['date'] = date_day
+    return clean_row(response_data, mapping)
 
 
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,
+    'postmark_stats_outbound_overview': clean_postmark_stats_outbound_overview,
 })
