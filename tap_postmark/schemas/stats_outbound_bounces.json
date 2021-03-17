@@ -14,11 +14,68 @@
 			"type": "string",
 			"format": "date-time"
 		},
-		"bounce_type": {
-			"type": "string"
+		"autoresponder": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
 		},
-		"count": {
-			"type": "number"
+		"blocked": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"dnserror": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"hardbounce": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"smtp_api_error": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"softbounce": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"spamnotification": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"transient": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"unknown": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
 		}
 	}
 }
