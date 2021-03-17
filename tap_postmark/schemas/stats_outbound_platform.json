@@ -14,11 +14,33 @@
 			"type": "string",
 			"format": "date-time"
 		},
-		"platform_type": {
-			"type": "string"
+		"desktop": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
 		},
-		"count": {
-			"type": "number"
+		"mobile": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"unknown": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
+		},
+		"webmail": {
+			"type": [
+				"null",
+				"number"
+			],
+			"format": "integer"
 		}
 	}
 }

@@ -104,3 +104,6 @@ state.json
 
 test.py
 .vscode
+target-json
+singer-postmark
+test_sample_config.json

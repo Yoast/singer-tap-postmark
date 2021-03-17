@@ -338,11 +338,17 @@ STREAMS: MappingProxyType = MappingProxyType({
             'date': {
                 'map': 'date', 'type': date_parser, 'null': False,
             },
-            'platform_type': {
-                'map': 'platform_type', 'null': False,
+            'Desktop': {
+                'map': 'desktop', 'type': int, 'null': True,
             },
-            'count': {
-                'map': 'count', 'null': False,
+            'Mobile': {
+                'map': 'mobile', 'type': int, 'null': True,
+            },
+            'Unknown': {
+                'map': 'unknown', 'type': int, 'null': True,
+            },
+            'WebMail': {
+                'map': 'webmail', 'type': int, 'null': True,
             },
         },
     },

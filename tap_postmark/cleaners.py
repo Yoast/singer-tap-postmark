@@ -151,8 +151,42 @@ def clean_postmark_stats_outbound_overview(
     return clean_row(response_data, mapping)
 
 
+def clean_postmark_stats_outbound_platform(
+    date_day: str,
+    response_data: dict,
+) -> dict:
+    """Clean postmark platform opens response_data.
+
+    Arguments:
+        response_data {dict} -- input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['stats_outbound_platform'].get(
+        'mapping',
+    )
+    # Create Unique ID
+    id = int(date_day.replace('-', ''))
+
+    # Create new cleaned Dict
+    # Days that didn’t produce statistics won’t appear in the JSON response.
+    cleaned_data: dict = {
+        'id': id,
+        'date': date_day,
+        'Desktop': response_data.get('Desktop'),
+        'Mobile': response_data.get('Mobile'),
+        'Unknown': response_data.get('Unknown'),
+        'WebMail': response_data.get('WebMail'),
+    }
+
+    return clean_row(cleaned_data, mapping)
+
+
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,
     'postmark_stats_outbound_overview': clean_postmark_stats_outbound_overview,
+    'postmark_stats_outbound_platform': clean_postmark_stats_outbound_platform,
 })
