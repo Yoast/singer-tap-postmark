@@ -11,15 +11,16 @@ setup(
     py_modules=["tap_postmark"],
     install_requires=[
         # NB: Pin these to a more specific version for tap reliability
-        "singer-python",
-        "requests",
+        'singer-python',
+        'httpx',
+        'httpx[http2]',
     ],
     entry_points="""
     [console_scripts]
     tap-postmark=tap_postmark:main
     """,
     packages=["tap_postmark"],
-    package_data = {
+    package_data={
         "schemas": ["tap_postmark/schemas/*.json"]
     },
     include_package_data=True,

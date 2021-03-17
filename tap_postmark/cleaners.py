@@ -1,129 +1,127 @@
 """Postmark cleaners."""
 # -*- coding: utf-8 -*-
 
-import base64
-import logging
-from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Optional, Union
-
-import arrow
-from pandas import json_normalize
+from tap_postmark.streams import STREAMS
+from typing import Any, Optional
 
 
-def clean_postmark_message_outbound(doc: dict) -> dict:
-    """Clean postmark outbound messages."""
-    # Remove useless data
-    doc.pop('Attachments', None)
-    doc.pop('Bcc', None)
-    doc.pop('Cc', None)
-    doc.pop('To', None)
-
-    # Assume there is only 1 recipient and select it from the list
-    if doc.get('Recipients'):
-        # Convert to base64
-        doc['Recipients'] = \
-            base64.b64encode(doc['Recipients'][0].encode()).decode()
-
-    # Convert to date
-    doc['ReceivedAt'] = to_date(doc.get('ReceivedAt', ''))
-
-    # Convert to none
-    doc['TrackLinks'] = \
-        False if doc.get('TrackLinks', 'None') == 'None' else doc['TrackLinks']
-    doc['TrackOpens'] = \
-        False if doc.get('TrackOpens', 'None') == 'None' else doc['TrackOpens']
-
-    doc['_datetime'] = arrow.utcnow().datetime
-    return doc
+class ConvertionError(ValueError):
+    """Failed to convert value."""
 
 
-def clean_postmark_message_opens(docs: dict) -> dict:
-    """Clean postmark opens."""
-    # Normalize json
-    df = json_normalize(docs, sep='_')
+def to_type_or_null(
+    input_value: Any,
+    data_type: Optional[Any] = None,
+    nullable: bool = True,
+) -> Optional[Any]:
+    """Convert the input_value to the data_type.
 
-    # Remove columns
-    df.drop(columns=['Geo_Coords', 'Geo_IP', 'Geo_Zip', 'Recipient'],
-            inplace=True,
-            errors='ignore')
+    The input_value can be anything. This function attempts to convert the
+    input_value to the data_type. The data_type can be a data type such as str,
+    int or Decimal or it can be a function. If nullable is True, the value is
+    converted to None in cases where the input_value == None. For example:
+    a '' == None, {} == None and [] == None.
 
-    # Convert to date
-    df['ReceivedAt'] = df.ReceivedAt.apply(to_date)
+    Arguments:
+        input_value {Any} -- Input value
 
-    data: dict = df.to_dict(orient='records')
+    Keyword Arguments:
+        data_type {Optional[Any]} -- Data type to convert to (default: {None})
+        nullable {bool} -- Whether to convert empty to None (default: {True})
 
-    return data
+    Returns:
+        Optional[Any] -- The converted value
+    """
+    # If the input_value is not equal to None and a data_type input exists
+    if input_value and data_type:
+        # Convert the input value to the data_type
+        try:
+            return data_type(input_value)
+        except ValueError as err:
+            raise ConvertionError(
+                f'Could not convert {input_value} to {data_type}: {err}',
+            )
 
+    # If the input_value is equal to None and Nullable is True
+    elif not input_value and nullable:
+        # Convert '', {}, [] to None
+        return None
 
-def clean_postmark_stats_outbound_overview(doc: dict) -> dict:
-    """Clean postmark bounces data."""
-    # Insert date
-    doc['_datetime'] = arrow.utcnow().datetime
-    return doc
-
-
-def clean_postmark_stats_outbound_bounces(doc: dict) -> dict:
-    """Clean postmark bounces data."""
-    # Create a total bounces field
-    keys: list = list(doc.keys())
-    keys.remove('Date')
-    doc['Total'] = sum([doc[key] for key in keys])
-
-    # Convert fields to date
-    doc['Date'] = to_date(doc.get('Date', ''))
-
-    # Insert date
-    doc['_datetime'] = arrow.utcnow().datetime
-    return doc
-
-
-def clean_postmark_stats_outbound_platform(doc: dict) -> dict:
-    """Clean postmark opens platforms data."""
-    # Create a total opens field
-    keys: list = list(doc.keys())
-    keys.remove('Date')
-    doc['Total'] = sum([doc[key] for key in keys])
-
-    # Convert fields to date
-    doc['Date'] = to_date(doc.get('Date', ''))
-
-    # Insert date
-    doc['_datetime'] = arrow.utcnow().datetime
-    return doc
+    # If the input_value is equal to None, but nullable is False
+    # Return the original value
+    return input_value
 
 
-def clean_postmark_stats_outbound_clients(doc: dict) -> dict:
-    """Clean postmark emailclients data."""
-    # Convert fields to date
-    doc['Date'] = to_date(doc.get('Date', ''))
+def clean_row(row: dict, mapping: dict) -> dict:
+    """Clean the row according to the mapping.
 
-    if doc.get('Email.cz'):
-        doc['Email_cz'] = doc.pop('Email.cz')
+    The mapping is a dictionary with optional keys:
+    - map: The name of the new key/column
+    - type: A data type or function to apply to the value of the key
+    - nullable: Whether to convert empty values, such as '', {} or [] to None
 
-    # Insert date
-    doc['_datetime'] = arrow.utcnow().datetime
-    return doc
+    Arguments:
+        row {dict} -- Input row
+        mapping {dict} -- Input mapping
+
+    Returns:
+        dict -- Cleaned row
+    """
+    cleaned: dict = {}
+
+    key: str
+    key_mapping: dict
+
+    # For every key and value in the mapping
+    for key, key_mapping in mapping.items():
+
+        # Retrieve the new mapping or use the original
+        new_mapping: str = key_mapping.get('map') or key
+
+        # Convert the value
+        cleaned[new_mapping] = to_type_or_null(
+            row[key],
+            key_mapping.get('type'),
+            key_mapping.get('null', True),
+        )
+
+    return cleaned
 
 
-def to_date(field: str) -> Union[datetime, str]:
-    """Convert a field to date."""
-    try:
-        # If field exist and has value
-        if field and len(field) > 0:
-            return arrow.get(field).datetime
-    # Handle exception
-    except arrow.parser.ParserError as err:
-        logging.error(err)
-    return field
+def clean_postmark_stats_outbound_bounces(
+    date_day: str,
+    response_data: dict,
+) -> dict:
+    """Clean postmark bounces response_data.
+
+    Arguments:
+        response_data {dict} -- input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Create Unique ID
+    id = int(date_day.replace('-', ''))
+    # Create new cleaned Dict
+    cleaned_data: dict = {
+        'id': id,
+        'date': date_day,
+        'autoresponder': response_data.get('AutoResponder'),
+        'blocked': response_data.get('Blocked'),
+        'dnserror': response_data.get('DnsError'),
+        'hardbounce': response_data.get('HardBounce'),
+        'smtp_api_error': response_data.get('SMTPApiError'),
+        'softbounce': response_data.get('SoftBounce'),
+        'spamnotification': response_data.get('SpamNotification'),
+        'transient': response_data.get('Transient'),
+        'unknown': response_data.get('Unknown'),
+    }
+    response_data.pop('Days', None)
+    return cleaned_data
 
 
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
-    'postmark_message_outbound': clean_postmark_message_outbound,
-    'postmark_message_opens': clean_postmark_message_opens,
-    'postmark_stats_outbound_overview': clean_postmark_stats_outbound_overview,
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,
-    'postmark_stats_outbound_platform': clean_postmark_stats_outbound_platform,
-    'postmark_stats_outbound_clients': clean_postmark_stats_outbound_clients,
 })
