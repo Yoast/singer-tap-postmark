@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from types import MappingProxyType
-from typing import Callable, Generator
+from typing import Callable, List, Generator
 
 import httpx
 import singer
@@ -24,6 +24,8 @@ API_BOUNCE_PATH: str = '/bounces'
 API_CLIENTS_PATH: str = '/emailclients'
 API_PLATFORM_PATH: str = '/platforms'
 API_DATE_PATH: str = '?fromdate=:date:&todate=:date:'
+
+MESSAGES_MAX_HISTORY: timedelta = timedelta(days=45)  # noqa: WPS432
 
 HEADERS: MappingProxyType = MappingProxyType({  # Frozen dictionary
     'Accept': 'application/json',
@@ -222,6 +224,104 @@ class Postmark(object):  # noqa: WPS230
 
             # Yield Cleaned results
             yield cleaner(date_day, response_data)
+
+    def messages_outbound(self, **kwargs: dict) -> Generator[dict, None, None]:
+        """Outbound messages.
+
+        Raises:
+            ValueError: When the parameter start_date is not in the kwargs
+            ValueError: If the start_date is more than 45 days ago
+
+        Yields:
+            Generator[dict, None, None] -- Messages
+        """
+        start_date_input: str = str(kwargs.get('start_date', ''))
+
+        # Check start date
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Parse start date
+        start_date: date = datetime.strptime(
+            start_date_input,
+            '%Y-%m-%d',
+        ).date()
+        if start_date < date.today() - MESSAGES_MAX_HISTORY:
+            raise ValueError('The start_date must be at max 45 days ago.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get(
+            'postmark_messages_outbound',
+            {},
+        )
+
+        # Create Header with Auth Token
+        self._create_headers()
+
+        # Build URL
+        url: str = (
+            f'{API_SCHEME}{API_BASE_URL}{API_MESSAGES_PATH}'
+            f'{API_OUTBOUND_PATH}'
+        )
+
+        # Number of messages to fetch in a batch
+        batch_size: int = 500
+
+        # For every date between the start date and now
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Update http parameters
+            http_parameters: dict = {
+                'count': batch_size,
+                'fromdate': date_day,
+                'todate': date_day,
+                'offset': 0,
+            }
+
+            # Paging helpers
+            more = True
+            total = 0
+
+            # While there are more messages availbe
+            while more:
+
+                # Make the call to Postmark API
+                response: httpx._models.Response = self.client.get(  # noqa
+                    url,
+                    headers=self.headers,
+                    params=http_parameters,
+                )
+
+                # Raise error on 4xx and 5xxx
+                response.raise_for_status()
+
+                # Create dictionary from response
+                response_data: dict = response.json()
+
+                # Retrieve list of messages
+                message_data: List[dict] = response_data.get('Messages', [])
+
+                # Count the messages
+                message_count: int = len(message_data)
+
+                # If the batch is not full, then there are no more batches
+                if message_count < batch_size:
+                    more = False
+
+                # Clean and yield the message
+                for message in message_data:
+                    yield cleaner(message)
+                    total += 1
+
+                # Batch counter
+                counter: int = (total // batch_size) + 1
+
+                self.logger.info(
+                    f'Date {date_day}, batch: {counter}, messages: {total}',
+                )
+
+                # Update the offset
+                http_parameters['offset'] += batch_size
 
     def _start_days_till_now(self, start_date: str) -> Generator:
         """Yield YYYY/MM/DD for every day until now.

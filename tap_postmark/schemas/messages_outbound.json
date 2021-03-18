@@ -6,110 +6,20 @@
 	],
 	"additionalProperties": false,
 	"properties": {
-		"recordtype": {
-			"type": "string"
-		},
-		"client": {
+		"cc": {
 			"type": [
 				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"name": {
-					"type": "string"
-				},
-				"company": {
-					"type": "string"
-				},
-				"family": {
-					"type": "string"
-				}
-			}
+				"string"
+			]
 		},
-		"os": {
-			"type": [
-				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"name": {
-					"type": "string"
-				},
-				"company": {
-					"type": "string"
-				},
-				"family": {
-					"type": "string"
-				}
-			}
-		},
-		"platform": {
+		"from": {
 			"type": "string"
 		},
-		"user_agent": {
-			"type": "string"
-		},
-		"read_seconds": {
-			"type": "number"
-		},
-		"geo": {
+		"bcc": {
 			"type": [
 				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"country_iso_code": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"country": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"region_iso_code": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"region": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"city": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"zip": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"coords": {
-					"type": [
-						"null",
-						"string"
-					]
-				},
-				"ip": {
-					"type": [
-						"null",
-						"string"
-					]
-				}
-			}
+				"string"
+			]
 		},
 		"message_id": {
 			"type": "string"
@@ -117,18 +27,44 @@
 		"message_stream": {
 			"type": "string"
 		},
-		"recieved_at": {
+		"received_at": {
 			"type": "string",
 			"format": "date-time"
 		},
-		"tag": {
+		"recipients": {
+			"type": [
+				"null",
+				"array"
+			],
+			"additionalProperties": false,
+			"item": {
+				"type": "string",
+			}
+		},
+		"status": {
+			"type": "string"
+		},
+		"to": {
+			"type": [
+				"null",
+				"array"
+			],
+			"additionalProperties": false,
+			"item": {
+				"type": "string",
+			}
+		},
+		"track_links": {
 			"type": [
 				"null",
 				"string"
 			]
 		},
-		"recipient": {
-			"type": "string"
+		"track_opens": {
+			"type": [
+				"null",
+				"boolean"
+			]
 		}
 	}
 }

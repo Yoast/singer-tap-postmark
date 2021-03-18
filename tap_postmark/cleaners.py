@@ -184,9 +184,29 @@ def clean_postmark_stats_outbound_platform(
     return clean_row(cleaned_data, mapping)
 
 
+def clean_postmark_messages_outbound(
+    response_data: dict,
+) -> dict:
+    """Clean postmark messages outbound response_data.
+
+    Arguments:
+        response_data {dict} -- Input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['messages_outbound'].get(
+        'mapping',
+        {},
+    )
+    return clean_row(response_data, mapping)
+
+
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,
     'postmark_stats_outbound_overview': clean_postmark_stats_outbound_overview,
     'postmark_stats_outbound_platform': clean_postmark_stats_outbound_platform,
+    'postmark_messages_outbound': clean_postmark_messages_outbound,
 })

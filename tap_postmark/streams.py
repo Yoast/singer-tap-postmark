@@ -258,6 +258,41 @@ STREAMS: MappingProxyType = MappingProxyType({
         'replication_method': 'INCREMENTAL',
         'replication_key': 'id',
         'bookmark': 'batch',
+        'mapping': {
+            'Bcc': {
+                'map': 'bcc', 'null': True,
+            },
+            'Cc': {
+                'map': 'cc', 'null': True,
+            },
+            'From': {
+                'map': 'from', 'null': False,
+            },
+            'MessageID': {
+                'map': 'message_id', 'null': False,
+            },
+            'MessageStream': {
+                'map': 'message_stream', 'null': False,
+            },
+            'ReceivedAt': {
+                'map': 'received_at', 'null': False,
+            },
+            'Recipients': {
+                'map': 'recipients', 'null': False,
+            },
+            'Status': {
+                'map': 'status', 'null': False,
+            },
+            'To': {
+                'map': 'to', 'null': True,
+            },
+            'TrackLinks': {
+                'map': 'track_links', 'null': True,
+            },
+            'TrackOpens': {
+                'map': 'track_opens', 'null': True,
+            },
+        }
     },
     'messages_opens': {
         'key_properties': 'id',
