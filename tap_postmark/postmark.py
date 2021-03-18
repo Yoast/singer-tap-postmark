@@ -285,6 +285,9 @@ class Postmark(object):  # noqa: WPS230
             # While there are more messages availbe
             while more:
 
+                # Batch counter
+                counter: int = (total // batch_size) + 1
+
                 # Make the call to Postmark API
                 response: httpx._models.Response = self.client.get(  # noqa
                     url,
@@ -312,9 +315,6 @@ class Postmark(object):  # noqa: WPS230
                 for message in message_data:
                     yield cleaner(message)
                     total += 1
-
-                # Batch counter
-                counter: int = (total // batch_size) + 1
 
                 self.logger.info(
                     f'Date {date_day}, batch: {counter}, messages: {total}',
