@@ -1,6 +1,7 @@
 """Postmark cleaners."""
 # -*- coding: utf-8 -*-
 
+import collections
 from types import MappingProxyType
 from tap_postmark.streams import STREAMS
 from typing import Any, Optional
@@ -185,11 +186,13 @@ def clean_postmark_stats_outbound_platform(
 
 
 def clean_postmark_messages_outbound(
+    date_day: str,
     response_data: dict,
 ) -> dict:
     """Clean postmark messages outbound response_data.
 
     Arguments:
+        date_day {str} -- Date
         response_data {dict} -- Input response_data
 
     Returns:
@@ -200,13 +203,121 @@ def clean_postmark_messages_outbound(
         'mapping',
         {},
     )
+
+    # Add date
+    response_data['date'] = date_day
+
     return clean_row(response_data, mapping)
 
+
+def clean_postmark_stats_outbound_clients(
+    date_day: str,
+    response_data: dict,
+) -> dict:
+    """Clean postmark messages clients response_data.
+
+    Arguments:
+        date_day {str} -- Date
+        response_data {dict} -- Input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['stats_outbound_clients'].get(
+        'mapping',
+        {},
+    )
+
+    new_records: list = []
+
+    days: list = response_data.get('Days', [])
+
+    # For every day
+    for record in days:
+        # Create a new record
+        new_record = {
+            'date': record.get('Date')
+        }
+        record.pop('Date')
+
+        # For every client and count
+        for key, client_count in record.items():
+            new_record['client_type'] = key
+            new_record['count'] = client_count
+
+            new_records.append(new_record)
+
+    return [clean_row(new_record, mapping) for record in new_records]
+
+
+def clean_postmark_messages_opens(
+    date_day: str,
+    response_data: dict,
+) -> dict:
+    """Clean postmark messages opens response_data.
+
+    Arguments:
+        date_day {str} -- Date
+        response_data {dict} -- Input response_data
+
+    Returns:
+        dict -- cleaned response_data
+    """
+    # Get the mapping from the STREAMS
+    mapping: Optional[dict] = STREAMS['messages_opens'].get(
+        'mapping',
+        {},
+    )
+    # Flatten dict
+    response_data = flatten(response_data)
+
+    # Make sure all fields are there
+    response_data = {
+        'date': date_day,
+        'FirstOpen': response_data.get('FirstOpen'),
+        'Client_Name': response_data.get('Client_Name'),
+        'Client_Company': response_data.get('Client_Company'),
+        'Client_Family': response_data.get('Client_Family'),
+        'OS_Name': response_data.get('OS_Name'),
+        'OS_Company': response_data.get('OS_Company'),
+        'OS_Family': response_data.get('OS_Family'),
+        'Platform': response_data.get('Platform'),
+        'UserAgent': response_data.get('UserAgent'),
+        'Geo_CountryISOCode': response_data.get('Geo_CountryISOCode'),
+        'Geo_Country': response_data.get('Geo_Country'),
+        'Geo_RegionISOCode': response_data.get('Geo_RegionISOCode'),
+        'Geo_Region': response_data.get('Geo_Region'),
+        'Geo_City': response_data.get('Geo_City'),
+        'Geo_Zip': response_data.get('Geo_Zip'),
+        'Geo_Coords': response_data.get('Geo_Coords'),
+        'Geo_IP': response_data.get('Geo_IP'),
+        'MessageID': response_data.get('MessageID'),
+        'MessageStream': response_data.get('MessageStream'),
+        'ReceivedAt': response_data.get('ReceivedAt'),
+        'Tag': response_data.get('Tag'),
+        'Recipient': response_data.get('Recipient'),
+    }
+
+    return clean_row(response_data, mapping)
+
+
+def flatten(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
 
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,
     'postmark_stats_outbound_overview': clean_postmark_stats_outbound_overview,
     'postmark_stats_outbound_platform': clean_postmark_stats_outbound_platform,
+    'postmark_stats_outbound_clients': clean_postmark_stats_outbound_clients,
     'postmark_messages_outbound': clean_postmark_messages_outbound,
+    'postmark_messages_opens': clean_postmark_messages_opens,
 })

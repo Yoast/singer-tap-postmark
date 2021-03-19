@@ -256,9 +256,12 @@ STREAMS: MappingProxyType = MappingProxyType({
     'messages_outbound': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
-        'bookmark': 'batch',
+        'replication_key': 'date',
+        'bookmark': 'start_date',
         'mapping': {
+            'date': {
+                'map': 'date', 'null': False,
+            },
             'Bcc': {
                 'map': 'bcc', 'null': True,
             },
@@ -297,20 +300,91 @@ STREAMS: MappingProxyType = MappingProxyType({
     'messages_opens': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
-        'bookmark': 'batch',
+        'replication_key': 'date',
+        'bookmark': 'start_date',
+        'mapping': {
+            'date': {
+                'map': 'date', 'null': False,
+            },
+            'FirstOpen': {
+                'map': 'first_open', 'null': True,
+            },
+            'Client_Name': {
+                'map': 'client_name', 'null': True,
+            },
+            'Client_Company': {
+                'map': 'client_company', 'null': True,
+            },
+            'Client_Family': {
+                'map': 'client_family', 'null': True,
+            },
+            'OS_Name': {
+                'map': 'os_name', 'null': True,
+            },
+            'OS_Company': {
+                'map': 'os_company', 'null': True,
+            },
+            'OS_Family': {
+                'map': 'os_family', 'null': True,
+            },
+            'Platform': {
+                'map': 'platform', 'null': True,
+            },
+            'UserAgent': {
+                'map': 'user_agent', 'null': True,
+            },
+            'Geo_CountryISOCode': {
+                'map': 'geo_countryisocode', 'null': True,
+            },
+            'Geo_Country': {
+                'map': 'geo_country', 'null': True,
+            },
+            'Geo_RegionISOCode': {
+                'map': 'geo_regionisocode', 'null': True,
+            },
+            'Geo_Region': {
+                'map': 'geo_region', 'null': True,
+            },
+            'Geo_City': {
+                'map': 'geo_city', 'null': True,
+            },
+            'Geo_Zip': {
+                'map': 'geo_zip', 'null': True,
+            },
+            'Geo_Coords': {
+                'map': 'geo_coords', 'null': True,
+            },
+            'Geo_IP': {
+                'map': 'geo_ip', 'null': True,
+            },
+            'MessageID': {
+                'map': 'message_id', 'null': False,
+            },
+            'MessageStream': {
+                'map': 'message_stream', 'null': False,
+            },
+            'ReceivedAt': {
+                'map': 'received_at', 'null': False,
+            },
+            'Tag': {
+                'map': 'tag', 'null': True,
+            },
+            'Recipient': {
+                'map': 'recipient', 'null': False,
+            },
+        }
     },
     'stats_outbound_bounces': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
+        'replication_key': 'date',
         'bookmark': 'start_date',
         'mapping': {
             'id': {
                 'map': 'id', 'type': int, 'null': False,
             },
             'date': {
-                'map': 'date', 'type': date_parser, 'null': False,
+                'map': 'date',
             },
             'AutoResponder': {
                 'map': 'autoresponder', 'type': int, 'null': True,
@@ -344,14 +418,11 @@ STREAMS: MappingProxyType = MappingProxyType({
     'stats_outbound_clients': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
+        'replication_key': 'date',
         'bookmark': 'start_date',
         'mapping': {
-            'id': {
-                'map': 'id', 'type': int, 'null': False,
-            },
             'date': {
-                'map': 'date', 'type': date_parser, 'null': False,
+                'map': 'date',
             },
             'client_type': {
                 'map': 'client_type', 'null': False,
@@ -364,14 +435,14 @@ STREAMS: MappingProxyType = MappingProxyType({
     'stats_outbound_platform': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
+        'replication_key': 'date',
         'bookmark': 'start_date',
         'mapping': {
             'id': {
                 'map': 'id', 'type': int, 'null': False,
             },
             'date': {
-                'map': 'date', 'type': date_parser, 'null': False,
+                'map': 'date',
             },
             'Desktop': {
                 'map': 'desktop', 'type': int, 'null': True,
@@ -390,11 +461,11 @@ STREAMS: MappingProxyType = MappingProxyType({
     'stats_outbound_overview': {
         'key_properties': 'id',
         'replication_method': 'INCREMENTAL',
-        'replication_key': 'id',
+        'replication_key': 'date',
         'bookmark': 'start_date',
         'mapping': {
             'date': {
-                'map': 'date', 'type': date_parser, 'null': False,
+                'map': 'date',
             },
             'id': {
                 'map': 'id', 'null': False,

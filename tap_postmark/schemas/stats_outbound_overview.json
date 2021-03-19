@@ -11,7 +11,7 @@
 				"null",
 				"string"
 			],
-			"format": "date-time"
+			"format": "date"
 		},
 		"id": {
 			"type": "number",

@@ -6,6 +6,10 @@
 	],
 	"additionalProperties": false,
 	"properties": {
+		"date": {
+			"type": "string",
+			"format": "date"
+		},
 		"cc": {
 			"type": [
 				"null",
@@ -37,8 +41,9 @@
 				"array"
 			],
 			"additionalProperties": false,
-			"item": {
+			"items": {
 				"type": "string",
+				"additionalProperties": false
 			}
 		},
 		"status": {
@@ -50,8 +55,17 @@
 				"array"
 			],
 			"additionalProperties": false,
-			"item": {
-				"type": "string",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"Email": {
+						"type": "string"
+					},
+					"Name": {
+						"type": "string"
+					}
+				}
 			}
 		},
 		"track_links": {

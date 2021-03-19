@@ -1,5 +1,6 @@
 """Tools."""
 # -*- coding: utf-8 -*-
+from datetime import date, datetime, timedelta
 from functools import reduce
 from typing import Optional
 
@@ -58,3 +59,29 @@ def retrieve_bookmark_with_path(path: str, row: dict) -> Optional[str]:
     elif path:
         return row[path]
     return None
+
+
+def create_bookmark(stream_name: str, bookmark_value: str) -> str:
+    """Create bookmark.
+
+    Arguments:
+        stream_name {str} -- Name of stream
+        bookmark_value {str} -- Bookmark value
+
+    Returns:
+        str -- Created bookmark
+    """
+    if stream_name in {
+        'messages_opens',
+        'messages_outbound',
+        'stats_outbound_bounces',
+        'stats_outbound_clients',
+        'stats_outbound_overview',
+        'stats_outbound_platform',
+    }:
+        # Return tomorrow's date
+        tomorrow: date = datetime.strptime(
+            bookmark_value,
+            '%Y-%m-%d',
+        ).date() + timedelta(days=1)
+        return tomorrow.isoformat()

@@ -12,7 +12,7 @@
 		},
 		"date": {
 			"type": "string",
-			"format": "date-time"
+			"format": "date"
 		},
 		"autoresponder": {
 			"type": [

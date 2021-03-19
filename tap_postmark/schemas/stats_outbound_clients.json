@@ -5,13 +5,9 @@
 	],
 	"additionalProperties": false,
 	"properties": {
-		"id": {
-			"type": "number",
-			"format": "integer"
-		},
 		"date": {
 			"type": "string",
-			"format": "date-time"
+			"format": "date"
 		},
 		"client_type": {
 			"type": "string"
