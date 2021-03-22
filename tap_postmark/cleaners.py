@@ -312,6 +312,7 @@ def flatten(d, parent_key='', sep='_'):
             items.append((new_key, v))
     return dict(items)
 
+
 # Collect all cleaners
 CLEANERS: MappingProxyType = MappingProxyType({
     'postmark_stats_outbound_bounces': clean_postmark_stats_outbound_bounces,

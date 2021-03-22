@@ -116,7 +116,7 @@ class Postmark(object):  # noqa: WPS230
             ValueError: When the parameter start_date is missing
 
         Yields:
-            Generator[dict] --  Cleaned Bounce Data
+            Generator[dict] --  Cleaned Client Data
         """
         # Validate the start_date value exists
         start_date_input: str = str(kwargs.get('start_date', ''))
@@ -139,7 +139,7 @@ class Postmark(object):  # noqa: WPS230
             )
 
             self.logger.info(
-                f'Recieving Bounce stats from {date_day}'
+                f'Recieving Client stats from {date_day}'
             )
 
             # Build URL
@@ -483,7 +483,6 @@ class Postmark(object):  # noqa: WPS230
                 if http_parameters['offset'] >= 10000:  # noqa: WPS432
                     break
 
-
     def _start_days_till_now(self, start_date: str) -> Generator:
         """Yield YYYY/MM/DD for every day until now.
 
@@ -510,8 +509,6 @@ class Postmark(object):  # noqa: WPS230
 
         # Yield dates in YYYY-MM-DD format
         yield from (date_day.strftime('%Y-%m-%d') for date_day in dates)
-
-
 
     def _create_headers(self) -> None:
         """Create authentication headers for requests."""
