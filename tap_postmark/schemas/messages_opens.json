@@ -6,83 +6,128 @@
 	],
 	"additionalProperties": false,
 	"properties": {
+		"date": {
+			"type": "string",
+			"format": "date"
+		},
+		"first_open": {
+			"type": [
+				"null",
+				"boolean"
+			]
+		},
+		"client_name": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"client_company": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"client_family": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"os_name": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"os_company": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"os_family": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"platform": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"user_agent": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_countryisocode": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_country": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_regionisocode": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_region": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_city": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_zip": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_coords": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
+		"geo_ip": {
+			"type": [
+				"null",
+				"string"
+			]
+		},
 		"message_id": {
 			"type": "string"
 		},
 		"message_stream": {
 			"type": "string"
 		},
-		"to": {
+		"received_at": {
+			"type": "string"
+		},
+		"tag": {
 			"type": [
 				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"email": {
-					"type": "string"
-				},
-				"name": {
-					"type": [
-						"null",
-						"string"
-					]
-				}
-			}
+				"string"
+			]
 		},
-		"cc": {
-			"type": [
-				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"email": {
-					"type": "string"
-				},
-				"name": {
-					"type": [
-						"null",
-						"string"
-					]
-				}
-			}
-		},
-		"bcc": {
-			"type": [
-				"null",
-				"object"
-			],
-			"additionalProperties": false,
-			"properties": {
-				"email": {
-					"type": "string"
-				},
-				"name": {
-					"type": [
-						"null",
-						"string"
-					]
-				}
-			}
-		},
-		"recieved_at": {
-			"type": "string",
-			"format": "date-time"
-		},
-		"from": {
-			"type": "string"
-		},
-		"subject": {
-			"type": "string"
-		},
-		"status": {
-			"type": "string"
-		},
-		"track_opens": {
-			"type": "string"
-		},
-		"track_links": {
+		"recipient": {
 			"type": "string"
 		}
 	}

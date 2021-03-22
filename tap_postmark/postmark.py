@@ -2,264 +2,520 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 from types import MappingProxyType
-from typing import Generator, Optional
+from typing import Callable, List, Generator
 
 import httpx
 import singer
-from dateutil.parser import isoparse
-from dateutil.rrule import WEEKLY, rrule
+from dateutil.rrule import DAILY, rrule
 
-from tap_paypal.cleaners import clean_paypal_transactions
+from tap_postmark.cleaners import CLEANERS
 
-# Todo: Sadbox
+# Example URL: https://api.postmarkapp.com/stats/outbound/opens/platforms
+
 API_SCHEME: str = 'https://'
 API_BASE_URL: str = 'api.postmarkapp.com'
 API_MESSAGES_PATH: str = '/messages'
 API_STATS_PATH: str = '/stats'
+API_OUTBOUND_PATH: str = '/outbound'
 API_OPENS_PATH: str = '/opens'
-API_
+API_BOUNCE_PATH: str = '/bounces'
+API_CLIENTS_PATH: str = '/emailclients'
+API_PLATFORM_PATH: str = '/platforms'
+API_DATE_PATH: str = '?fromdate=:date:&todate=:date:'
 
-API_PATH_OAUTH: str = 'oauth2/token'
-API_PATH_TRANSACTIONS: str = 'reporting/transactions'
+MESSAGES_MAX_HISTORY: timedelta = timedelta(days=45)  # noqa: WPS432
 
 HEADERS: MappingProxyType = MappingProxyType({  # Frozen dictionary
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer :accesstoken:',
+    'Accept': 'application/json',
+    'X-Postmark-Server-Token': ':token:',
 })
 
 
-class PayPal(object):  # noqa: WPS230
-    """PayPal API Client."""
+class Postmark(object):  # noqa: WPS230
+    """Postmark API Client."""
 
     def __init__(
         self,
-        client_id: str,
-        secret: str,
-        sandbox=False,
-    ) -> None:
+        postmark_server_token: str,
+    ) -> None:  # noqa: DAR101
         """Initialize client.
 
         Arguments:
-            client_id {str} -- PayPal client id
-            secret {str} -- PayPal secret
-            sandbox {bool} -- Whether to use the sandbox or live environment
+            postmark_server_token {str} -- Postmark Server Token
         """
-        self.client_id: str = client_id
-        self.secret: str = secret
-        self.sandbox: bool = sandbox
-        self.base: str = API_BASE_URL_SANDBOX if sandbox else API_BASE_URL
+        self.postmark_server_token: str = postmark_server_token
         self.logger: logging.Logger = singer.get_logger()
+        self.client: httpx.Client = httpx.Client(http2=True)
 
-        self.token: Optional[str] = None
-        self.token_expires: Optional[datetime] = None
-
-        if sandbox:
-            self.logger.info('Running in Sandbox environment')
-        else:
-            self.logger.info('Running in Live environment')
-
-        # Perform authentication during initialising
-        self._authenticate()
-
-    def paypal_transactions(  # noqa: WPS210, WPS213
+    def stats_outbound_bounces(  # noqa: WPS210, WPS432
         self,
         **kwargs: dict,
-    ) -> Generator[dict, None, None]:
-        """Paypal transaction history.
+    ) -> Generator[dict, None, None]:  # noqa: DAR101
+        """Get all bounce reasons from date.
 
         Raises:
             ValueError: When the parameter start_date is missing
 
         Yields:
-            Generator[dict] -- Yields PayPal transactions
+            Generator[dict] --  Cleaned Bounce Data
         """
-        self.logger.info('Stream PayPal transactions')
-
         # Validate the start_date value exists
         start_date_input: str = str(kwargs.get('start_date', ''))
 
         if not start_date_input:
             raise ValueError('The parameter start_date is required.')
 
-        # Set start date and end date
-        start_date: datetime = isoparse(start_date_input)
-        end_date: datetime = datetime.now(timezone.utc).replace(microsecond=0)
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get('postmark_stats_outbound_bounces', {})
 
-        self.logger.info(
-            f'Retrieving transactions from {start_date} to {end_date}',
-        )
-        # Extra kwargs will be converted to parameters in the API requests
-        # start_date is parsed into batches, thus we remove it from the kwargs
-        kwargs.pop('start_date', None)
+        # Create Header with Auth Token
+        self._create_headers()
 
-        # The difference between start_date and end_date can max be 31 days
-        # Split up the requests into weekly batches
-        batches: rrule = rrule(
-            WEEKLY,
-            dtstart=start_date,
-            until=end_date,
-        )
+        for date_day in self._start_days_till_now(start_date_input):
 
-        total_batches: int = len(list(batches))
-        self.logger.info(f'Total weekly batches: {total_batches}')
-
-        current_batch: int = 0
-
-        # Batches contain all start_dates, the end_date is 6 days 23:59 later
-        # E.g. 2021-01-01T00:00:00+0000 <--> 2021-01-07T23:59:59+0000
-        for start_date_batch in batches:
-            # Determine the end_date
-            end_date_batch: datetime = (
-                start_date_batch + timedelta(days=7, seconds=-1)
+            # Replace placeholder in reports path
+            from_to_date: str = API_DATE_PATH.replace(
+                ':date:',
+                date_day,
             )
-
-            # Prevent the end_date from going into the future
-            if end_date_batch > end_date:
-                end_date_batch = end_date
-
-            # Convert the datetimes to datetime formats the api expects
-            start_date_str: str = self._date_to_paypal_format(start_date_batch)
-            end_date_str: str = self._date_to_paypal_format(end_date_batch)
-
-            current_batch += 1
 
             self.logger.info(
-                f'Parsing batch {current_batch}: {start_date_str} <--> '
-                f'{end_date_str}',
+                f'Recieving Bounce stats from {date_day}'
             )
 
-            # Default initial parameters send with each request
-            fixed_params: dict = {
-                'fields': 'all',
-                'page_size': 100,
-                'page': 1,  # Is updated in further requests
-                'start_date': start_date_str,
-                'end_date': end_date_str,
-            }
-            # Kwargs can be used to add aditional parameters to each requests
-            http_params: dict = {**fixed_params, **kwargs}
-
-            # Start of pagination
-            page: int = 0
-            total_pages: int = 1
+            # Build URL
             url: str = (
-                f'{API_SCHEME}{self.base}/'
-                f'{API_VERSION}/{API_PATH_TRANSACTIONS}'
+                f'{API_SCHEME}{API_BASE_URL}{API_STATS_PATH}'
+                f'{API_OUTBOUND_PATH}{API_BOUNCE_PATH}{from_to_date}'
             )
 
-            # Request more pages if there are available
-            while page < total_pages:
-                # Update current page
-                page += 1
-                http_params['page'] = page
+            # Make the call to Postmark API
+            response: httpx._models.Response = self.client.get(  # noqa: WPS437
+                url,
+                headers=self.headers,
+            )
 
-                # Request data from the API
-                client: httpx.Client = httpx.Client(http2=True)
-                response: httpx._models.Response = client.get(  # noqa: WPS437
+            # Raise error on 4xx and 5xxx
+            response.raise_for_status()
+
+            # Create dictionary from response
+            response_data: dict = response.json()
+
+            # Yield Cleaned results
+            yield cleaner(date_day, response_data)
+
+    def stats_outbound_clients(  # noqa: WPS210, WPS432
+        self,
+        **kwargs: dict,
+    ) -> Generator[dict, None, None]:  # noqa: DAR101
+        """Get all clients from date.
+
+        Raises:
+            ValueError: When the parameter start_date is missing
+
+        Yields:
+            Generator[dict] --  Cleaned Client Data
+        """
+        # Validate the start_date value exists
+        start_date_input: str = str(kwargs.get('start_date', ''))
+
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get('postmark_stats_outbound_clients', {})
+
+        # Create Header with Auth Token
+        self._create_headers()
+
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Replace placeholder in reports path
+            from_to_date: str = API_DATE_PATH.replace(
+                ':date:',
+                date_day,
+            )
+
+            self.logger.info(
+                f'Recieving Client stats from {date_day}'
+            )
+
+            # Build URL
+            url: str = (
+                f'{API_SCHEME}{API_BASE_URL}{API_STATS_PATH}'
+                f'{API_OUTBOUND_PATH}{API_OPENS_PATH}{API_CLIENTS_PATH}'
+                f'{from_to_date}'
+            )
+
+            # Make the call to Postmark API
+            response: httpx._models.Response = self.client.get(  # noqa: WPS437
+                url,
+                headers=self.headers,
+            )
+
+            # Raise error on 4xx and 5xxx
+            response.raise_for_status()
+
+            # Create dictionary from response
+            response_data: dict = response.json()
+
+            # Yield Cleaned results
+            yield from cleaner(date_day, response_data)
+
+    def stats_outbound_overview(  # noqa: WPS210, WPS432
+        self,
+        **kwargs: dict,
+    ) -> Generator[dict, None, None]:  # noqa: DAR101
+        """Get all bounce reasons from date.
+
+        Raises:
+            ValueError: When the parameter start_date is missing
+
+        Yields:
+            Generator[dict] --  Cleaned Bounce Data
+        """
+        # Validate the start_date value exists
+        start_date_input: str = str(kwargs.get('start_date', ''))
+
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get(
+            'postmark_stats_outbound_overview', {}
+        )
+
+        # Create Header with Auth Token
+        self._create_headers()
+
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Replace placeholder in reports path
+            from_to_date: str = API_DATE_PATH.replace(
+                ':date:',
+                date_day,
+            )
+
+            self.logger.info(
+                f'Recieving overview stats from {date_day}'
+            )
+
+            # Build URL
+            url: str = (
+                f'{API_SCHEME}{API_BASE_URL}{API_STATS_PATH}'
+                f'{API_OUTBOUND_PATH}{from_to_date}'
+            )
+
+            # Make the call to Postmark API
+            response: httpx._models.Response = self.client.get(  # noqa: WPS437
+                url,
+                headers=self.headers,
+            )
+
+            # Raise error on 4xx and 5xxx
+            response.raise_for_status()
+
+            # Create dictionary from response
+            response_data: dict = response.json()
+
+            # Yield Cleaned results
+            yield cleaner(date_day, response_data)
+
+    def stats_outbound_platform(  # noqa: WPS210, WPS432
+        self,
+        **kwargs: dict,
+    ) -> Generator[dict, None, None]:  # noqa: DAR101
+        """Get all platforms that opened mails from date.
+
+        Raises:
+            ValueError: When the parameter start_date is missing
+
+        Yields:
+            Generator[dict] --  Cleaned Bounce Data
+        """
+        # Validate the start_date value exists
+        start_date_input: str = str(kwargs.get('start_date', ''))
+
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get(
+            'postmark_stats_outbound_platform', {}
+        )
+
+        # Create Header with Auth Token
+        self._create_headers()
+
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Replace placeholder in reports path
+            from_to_date: str = API_DATE_PATH.replace(
+                ':date:',
+                date_day,
+            )
+
+            self.logger.info(
+                f'Recieving platform opens from {date_day}'
+            )
+
+            # Build URL
+            url: str = (
+                f'{API_SCHEME}{API_BASE_URL}{API_STATS_PATH}'
+                f'{API_OUTBOUND_PATH}{API_OPENS_PATH}'
+                f'{API_PLATFORM_PATH}{from_to_date}'
+            )
+
+            # Make the call to Postmark API
+            response: httpx._models.Response = self.client.get(  # noqa: WPS437
+                url,
+                headers=self.headers,
+            )
+
+            # Raise error on 4xx and 5xxx
+            response.raise_for_status()
+
+            # Create dictionary from response
+            response_data: dict = response.json()
+
+            # Yield Cleaned results
+            yield cleaner(date_day, response_data)
+
+    def messages_outbound(self, **kwargs: dict) -> Generator[dict, None, None]:
+        """Outbound messages.
+
+        Raises:
+            ValueError: When the parameter start_date is not in the kwargs
+            ValueError: If the start_date is more than 45 days ago
+
+        Yields:
+            Generator[dict, None, None] -- Messages
+        """
+        start_date_input: str = str(kwargs.get('start_date', ''))
+
+        # Check start date
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Parse start date
+        start_date: date = datetime.strptime(
+            start_date_input,
+            '%Y-%m-%d',
+        ).date()
+        if start_date < date.today() - MESSAGES_MAX_HISTORY:
+            raise ValueError('The start_date must be at max 45 days ago.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get(
+            'postmark_messages_outbound',
+            {},
+        )
+
+        # Create Header with Auth Token
+        self._create_headers()
+
+        # Build URL
+        url: str = (
+            f'{API_SCHEME}{API_BASE_URL}{API_MESSAGES_PATH}'
+            f'{API_OUTBOUND_PATH}'
+        )
+
+        # Number of messages to fetch in a batch
+        batch_size: int = 500
+
+        # For every date between the start date and now
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Update http parameters
+            http_parameters: dict = {
+                'count': batch_size,
+                'fromdate': date_day,
+                'todate': date_day,
+                'offset': 0,
+            }
+
+            # Paging helpers
+            more = True
+            total = 0
+
+            # While there are more messages availbe
+            while more:
+
+                # Batch counter
+                counter: int = (total // batch_size) + 1
+
+                # Make the call to Postmark API
+                response: httpx._models.Response = self.client.get(  # noqa
                     url,
                     headers=self.headers,
-                    params=http_params,
+                    params=http_parameters,
                 )
 
                 # Raise error on 4xx and 5xxx
                 response.raise_for_status()
 
+                # Create dictionary from response
                 response_data: dict = response.json()
 
-                # Retrieve the current page details
-                page = response_data.get('page', 1)
-                total_pages = response_data.get('total_pages', 0)
+                # Retrieve list of messages
+                message_data: List[dict] = response_data.get('Messages', [])
 
-                percentage_page: float = round((page / total_pages) * 100, 2)
-                percentage_batch: float = round(
-                    (current_batch / total_batches) * 100, 2,
-                )
+                # Count the messages
+                message_count: int = len(message_data)
+
+                # If the batch is not full, then there are no more batches
+                if message_count < batch_size:
+                    more = False
+
+                # Clean and yield the message
+                for message in message_data:
+                    yield cleaner(date_day, message)
+                    total += 1
 
                 self.logger.info(
-                    f'Batch: {current_batch} of '  # noqa: WPS221
-                    f'{total_batches} '
-                    f'({percentage_batch}%), '
-                    f'page: {page} of '
-                    f'{total_pages} '
-                    f'({percentage_page}%)',
+                    f'Date {date_day}, batch: {counter}, messages: {total}',
                 )
 
-                # Yield every transaction in the response
-                transactions: list = response_data.get(
-                    'transaction_details',
-                    [],
-                )
-                yield from (
-                    clean_paypal_transactions(transaction)
-                    for transaction in transactions
-                )
-                # for transaction in transactions:
-                #     yield clean_paypal_transactions(transaction)
+                # Update the offset
+                http_parameters['offset'] += batch_size
 
-        self.logger.info('Finished: paypal_transactions')
+    def messages_opens(self, **kwargs: dict) -> Generator[dict, None, None]:
+        """Opens messages.
 
-    def _authenticate(self) -> None:  # noqa: WPS210
-        """Generate a bearer access token."""
-        url: str = (
-            f'{API_SCHEME}{self.base}/'
-            f'{API_VERSION}/{API_PATH_OAUTH}'
-        )
-        headers: dict = {
-            'Accept': 'application/json',
-            'Accept-Language': 'en_US',
-        }
-        post_data: dict = {'grant_type': 'client_credentials'}
+        Raises:
+            ValueError: When the parameter start_date is not in the kwargs
+            ValueError: If the start_date is more than 45 days ago
 
-        now: datetime = datetime.utcnow()
+        Yields:
+            Generator[dict, None, None] -- Messages
+        """
+        start_date_input: str = str(kwargs.get('start_date', ''))
 
-        client: httpx.Client = httpx.Client(http2=True)
-        response: httpx._models.Response = client.post(  # noqa: WPS437
-            url,
-            headers=headers,
-            data=post_data,
-            auth=(self.client_id, self.secret),
+        # Check start date
+        if not start_date_input:
+            raise ValueError('The parameter start_date is required.')
+
+        # Parse start date
+        start_date: date = datetime.strptime(
+            start_date_input,
+            '%Y-%m-%d',
+        ).date()
+        if start_date < date.today() - MESSAGES_MAX_HISTORY:
+            raise ValueError('The start_date must be at max 45 days ago.')
+
+        # Get the Cleaner
+        cleaner: Callable = CLEANERS.get(
+            'postmark_messages_opens',
+            {},
         )
 
-        # Raise error on 4xx and 5xxx
-        response.raise_for_status()
-
-        response_data: dict = response.json()
-
-        # Save the token
-        self.token = response_data.get('access_token')
-
-        # Set experation date for token
-        expires_in: int = response_data.get('expires_in', 0)
-        self.token_expires = now + timedelta(expires_in)
-
-        # Set up headers to use in API requests
+        # Create Header with Auth Token
         self._create_headers()
 
-        appid: Optional[str] = response_data.get('app_id')
-
-        self.logger.info(
-            'Authentication succesfull '
-            f'(appid: {appid})',
+        # Build URL
+        url: str = (
+            f'{API_SCHEME}{API_BASE_URL}{API_MESSAGES_PATH}'
+            f'{API_OUTBOUND_PATH}{API_OPENS_PATH}'
         )
 
-    def _create_headers(self) -> None:
-        """Create authenticationn headers for requests."""
-        headers: dict = dict(HEADERS)
-        headers['Authorization'] = headers['Authorization'].replace(
-            ':accesstoken:',
-            self.token,
-        )
-        self.headers = headers
+        # Number of messages to fetch in a batch
+        batch_size: int = 500
 
-    def _date_to_paypal_format(self, input_datetime: datetime) -> str:
-        """Convert a datetime to the format that the PayPal api expects.
+        # For every date between the start date and now
+        for date_day in self._start_days_till_now(start_date_input):
+
+            # Update http parameters
+            http_parameters: dict = {
+                'count': batch_size,
+                'fromdate': date_day,
+                'todate': date_day,
+                'offset': 0,
+            }
+
+            # Paging helpers
+            more = True
+            total = 0
+
+            # While there are more messages availbe
+            while more:
+
+                # Batch counter
+                counter: int = (total // batch_size) + 1
+
+                # Make the call to Postmark API
+                response: httpx._models.Response = self.client.get(  # noqa
+                    url,
+                    headers=self.headers,
+                    params=http_parameters,
+                )
+
+                # Raise error on 4xx and 5xxx
+                response.raise_for_status()
+
+                # Create dictionary from response
+                response_data: dict = response.json()
+
+                # Retrieve list of messages
+                message_data: List[dict] = response_data.get('Opens', [])
+
+                # Count the messages
+                message_count: int = len(message_data)
+
+                # If the batch is not full, then there are no more batches
+                if message_count < batch_size:
+                    more = False
+
+                # Clean and yield the message
+                for message in message_data:
+                    yield cleaner(date_day, message)
+                    total += 1
+
+                self.logger.info(
+                    f'Date {date_day}, batch: {counter}, opens: {total}',
+                )
+
+                # Update the offset
+                http_parameters['offset'] += batch_size
+
+                # API has hard limit of 10000 ofset
+                if http_parameters['offset'] >= 10000:  # noqa: WPS432
+                    break
+
+    def _start_days_till_now(self, start_date: str) -> Generator:
+        """Yield YYYY/MM/DD for every day until now.
 
         Arguments:
-            input_datetime {datetime} -- Input e.g. 2021-01-01 00:00:00+00:00
+            start_date {str} -- Start date e.g. 2020-01-01
 
-        Returns:
-            str -- Converted datetime: 2021-01-01T00:00:00+0000
+        Yields:
+            Generator -- Every day until now.
         """
-        return ''.join(input_datetime.isoformat().rsplit(':', 1))
+        # Parse input date
+        year: int = int(start_date.split('-')[0])
+        month: int = int(start_date.split('-')[1].lstrip())
+        day: int = int(start_date.split('-')[2].lstrip())
+
+        # Setup start period
+        period: date = date(year, month, day)
+
+        # Setup itterator
+        dates: rrule = rrule(
+            freq=DAILY,
+            dtstart=period,
+            until=datetime.utcnow(),
+        )
+
+        # Yield dates in YYYY-MM-DD format
+        yield from (date_day.strftime('%Y-%m-%d') for date_day in dates)
+
+    def _create_headers(self) -> None:
+        """Create authentication headers for requests."""
+        headers: dict = dict(HEADERS)
+        headers['X-Postmark-Server-Token'] = \
+            headers['X-Postmark-Server-Token'].replace(
+            ':token:',
+            self.postmark_server_token,
+        )
+        self.headers = headers

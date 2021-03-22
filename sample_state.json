@@ -1,0 +1,22 @@
+{
+  "bookmarks": {
+    "messages_opens": {
+      "start_date": "2021-03-01"
+    },
+    "messages_outbound": {
+      "start_date": "2021-03-01"
+    },
+    "stats_outbound_bounces": {
+      "start_date": "2021-01-01"
+    },
+    "stats_outbound_clients": {
+      "start_date": "2021-01-01"
+    },
+    "stats_outbound_overview": {
+      "start_date": "2021-01-01"
+    },
+    "stats_outbound_platform": {
+      "start_date": "2021-01-01"
+    }
+  }
+}
