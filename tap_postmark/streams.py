@@ -295,6 +295,9 @@ STREAMS: MappingProxyType = MappingProxyType({
             'TrackOpens': {
                 'map': 'track_opens', 'null': True,
             },
+            'Subject' : {
+                'map': 'subject', 'null': True, 
+            },
         }
     },
     'messages_opens': {
