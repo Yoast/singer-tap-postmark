@@ -79,6 +79,9 @@
 				"null",
 				"boolean"
 			]
+		},
+		"subject": {
+			"type": "string"
 		}
 	}
 }
