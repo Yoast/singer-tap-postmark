@@ -28,7 +28,7 @@
 		"message_id": {
 			"type": "string"
 		},
-		"MessageEvents": {
+		"message_events": {
 			"type": "string"
 		},
 		"message_stream": {
