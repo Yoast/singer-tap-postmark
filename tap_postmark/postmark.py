@@ -370,7 +370,35 @@ class Postmark(object):  # noqa: WPS230
                     more = False
 
                 # Clean and yield the message
+                # for each message, creating a new API and get message details
                 for message in message_data:
+                    API_MESSAGEID: str = '/'+ message['MessageID']
+                    API_DETAILS = '/details'
+                    url2: str = (
+                        f'{API_SCHEME}{API_BASE_URL}{API_MESSAGES_PATH}'
+                        f'{API_OUTBOUND_PATH}{API_MESSAGEID}{API_DETAILS}'
+                    )
+                    
+                    details_response : httpx._models.Response = self.client.get(  # noqa
+                        url2,
+                        headers=self.headers,
+                        params=http_parameters,
+                    )
+                    details_response.raise_for_status()
+
+                    # Create dictionary from response
+                    details_data: dict = details_response.json()
+
+                    # Retrieve list of messages
+                    details_messageEvents: List[dict] = details_data.get('MessageEvents', '')
+
+                    # Extract messageEvent types frome the MessageEvent list
+                    messageEvent_types: str = ''
+                    for event in details_messageEvents:
+                        messageEvent_types = messageEvent_types + event['Type']+',' 
+                    messageEvent_types =  messageEvent_types[:-1] # Get rid of the last comma                     
+                    message['MessageEvents'] = messageEvent_types
+
                     yield cleaner(date_day, message)
                     total += 1
 
