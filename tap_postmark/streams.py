@@ -274,6 +274,9 @@ STREAMS: MappingProxyType = MappingProxyType({
             'MessageID': {
                 'map': 'message_id', 'null': False,
             },
+             'MessageEvents': {
+                'map': 'MessageEvents',  'null': False,
+            },
             'MessageStream': {
                 'map': 'message_stream', 'null': False,
             },
