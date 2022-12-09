@@ -44,7 +44,7 @@ def sync(
         # Retrieve the state of the stream
         stream_state: dict = tools.get_stream_state(
             state,
-            stream.tap_stream_id
+            stream.tap_stream_id,
         )
         if not stream_state:
             stream_state = {'start_date': start_date}
