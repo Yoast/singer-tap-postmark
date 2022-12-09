@@ -30,7 +30,7 @@ def get_stream_state(state: dict, tap_stream_id: str) -> dict:
     return state.get(
         'bookmarks',
         {},
-    ).get(tap_stream_id)
+    ).get(tap_stream_id, {})
 
 
 def retrieve_bookmark_with_path(path: str, row: dict) -> Optional[str]:
