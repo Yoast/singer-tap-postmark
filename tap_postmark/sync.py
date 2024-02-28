@@ -46,6 +46,8 @@ def sync(
             state,
             stream.tap_stream_id,
         )
+        if not stream_state:
+            stream_state = {'start_date': start_date}
 
         LOGGER.debug(f'Stream state: {stream_state}')
 
